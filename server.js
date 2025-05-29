@@ -1,48 +1,43 @@
 const express = require('express');
-const axios = require('axios');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+
 const app = express();
-
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY; // ключ будет храниться в render, не в коде!
+// Маршрут: получить данные пациента по ИИН
+app.get('/api/patient/:iin', (req, res) => {
+    const iin = req.params.iin;
 
-app.post('/api/ai-chat', async (req, res) => {
-    const userMessage = req.body.message;
-    if (!userMessage) return res.status(400).json({error: 'Нет сообщения!'});
+    // Путь до файла JSON (предположим, /data/patients.json)
+    const dataPath = path.join(__dirname, 'data', 'patients.json');
 
-    try {
-        const openaiRes = await axios.post(
-            'https://api.openai.com/v1/chat/completions',
-            {
-                model: "gpt-3.5-turbo",
-                messages: [
-                    {
-                        role: "system",
-                        content: "Ты медицинский ассистент. Отвечай только на вопросы о болезнях, симптомах и здоровье. Если вопрос не про болезнь, скажи, что можешь отвечать только по медицинским вопросам."
-                    },
-                    {
-                        role: "user",
-                        content: userMessage
-                    }
-                ]
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${OPENAI_API_KEY}`,
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-        res.json({response: openaiRes.data.choices[0].message.content});
-    } catch (error) {
-        console.error(error.response?.data || error.message);
-        res.status(500).json({error: "AI сервер қатесі"});
-    }
+    fs.readFile(dataPath, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(500).json({ error: 'Ошибка чтения базы' });
+        }
+        let patients;
+        try {
+            patients = JSON.parse(data);
+        } catch (e) {
+            return res.status(500).json({ error: 'Ошибка разбора базы' });
+        }
+        const patient = patients.find(p => p.iin === iin);
+        if (!patient) {
+            return res.status(404).json({ error: 'Пациент не найден' });
+        }
+        res.json(patient);
+    });
 });
 
-app.get('/', (req, res) => res.send('AI Proxy сервер работает!'));
+// Для теста: простой корень
+app.get('/', (req, res) => {
+    res.send('Patient API is working!');
+});
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log('AI Proxy сервер запущен на порту ' + PORT));
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});

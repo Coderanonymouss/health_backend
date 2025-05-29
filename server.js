@@ -14,7 +14,7 @@ app.get('/api/patient/:iin', (req, res) => {
     const iin = req.params.iin;
 
     // Путь до файла JSON (предположим, /data/patients.json)
-    const dataPath = path.join(__dirname, 'data', 'patients.json');
+    const dataPath = path.join(__dirname, 'patients.json');
 
     fs.readFile(dataPath, 'utf8', (err, data) => {
         if (err) {

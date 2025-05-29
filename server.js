@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 // Маршрут: получить данные пациента по ИИН
-app.get('/api/patient/:iin', (req, res) => {
+app.get('/api/patient/iin', (req, res) => {
     const iin = req.params.iin;
 
     // Путь до файла JSON (предположим, /data/patients.json)

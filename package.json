@@ -1,0 +1,27 @@
+{
+  "name": "health_backend",
+  "version": "1.0.0",
+  "description": "��#\u0000 \u0000h\u0000e\u0000a\u0000l\u0000t\u0000h\u0000_\u0000b\u0000a\u0000c\u0000k\u0000e\u0000n\u0000d\u0000\r\u0000 \u0000",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Coderanonymouss/health_backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Coderanonymouss/health_backend/issues"
+  },
+  "homepage": "https://github.com/Coderanonymouss/health_backend#readme",
+  "dependencies": {
+    "axios": "^1.9.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  }
+}

@@ -59,6 +59,8 @@ mongoose.connect(MONGO_URI)
         console.error('❌ Ошибка при добавлении пациента:', err);
         res.status(500).json({ error: 'Ошибка при добавлении пациента', details: err.message });
       }
+        app.get('/api/patient', (req, res) => {
+          res.sendFile(path.join(__dirname, 'add_patient.html'));
     });
 
 // Массовое добавление пациентов
@@ -86,6 +88,8 @@ app.post('/api/patients', async (req, res) => {
     }
   }
   res.json(results);
+  app.get('/api/patients', (req, res) => {
+    res.sendFile(path.join(__dirname, 'add_patients.html'));
 });
 
     // 5. Проверка сервера

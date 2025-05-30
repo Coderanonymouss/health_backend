@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавить пациента</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+          background: #f4f8fb;
+          font-family: 'Segoe UI', Arial, sans-serif;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          margin: 0;
+        }
+        .card {
+          background: #fff;
+          padding: 2rem 2.5rem;
+          border-radius: 16px;
+          box-shadow: 0 4px 32px 0 #0002;
+          width: 100%;
+          max-width: 420px;
+          margin: 2rem auto;
+        }
+        h2 {
+          margin-bottom: 1rem;
+          font-weight: 700;
+          color: #263859;
+          text-align: center;
+        }
+        label {
+          font-size: 0.97em;
+          font-weight: 500;
+          margin-top: 1.3em;
+          display: block;
+          color: #40506a;
+        }
+        input, select {
+          margin-top: 6px;
+          width: 100%;
+          padding: 10px 13px;
+          font-size: 1em;
+          border-radius: 7px;
+          border: 1px solid #ccd6e0;
+          background: #f7fafd;
+          outline: none;
+          margin-bottom: 5px;
+          transition: border-color .2s;
+        }
+        input:focus, select:focus {
+          border-color: #5c8df6;
+          background: #fff;
+        }
+        button {
+          background: linear-gradient(90deg, #4e8af4 0%, #67d8d8 100%);
+          color: #fff;
+          border: none;
+          border-radius: 7px;
+          padding: 13px 0;
+          font-size: 1.07em;
+          margin-top: 1.2em;
+          width: 100%;
+          font-weight: 600;
+          box-shadow: 0 2px 12px 0 #67d8d840;
+          cursor: pointer;
+          transition: background 0.18s;
+        }
+        button:hover {
+          background: linear-gradient(90deg, #4e8af4 0%, #45b7c3 100%);
+        }
+        .success {
+          color: #37b37e;
+          margin-top: 14px;
+          text-align: center;
+          font-weight: 500;
+        }
+        .error {
+          color: #e04242;
+          margin-top: 14px;
+          text-align: center;
+          font-weight: 500;
+        }
+        @media (max-width: 500px) {
+          .card { padding: 1.3rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>Добавить пациента</h2>
+    <form id="patientForm" autocomplete="off">
+        <label>ЖСН (12 цифр)
+            <input type="text" id="iin" maxlength="12" required pattern="^\d{12}$"
+                   placeholder="Мысалы, 970215450123">
+        </label>
+        <label>Есімі
+            <input type="text" id="firstName" required placeholder="Есімі">
+        </label>
+        <label>Тегі
+            <input type="text" id="lastName" required placeholder="Тегі">
+        </label>
+        <label>Әкесінің аты
+            <input type="text" id="middleName" placeholder="Әкесінің аты">
+        </label>
+        <label>Туған күні
+            <input type="date" id="birthDate" required>
+        </label>
+        <label>Жынысы
+            <select id="gender" required>
+                <option value="">Таңдаңыз...</option>
+                <option value="ер">ер</option>
+                <option value="әйел">әйел</option>
+            </select>
+        </label>
+        <label>Диагноз
+            <input type="text" id="diagnosis" required placeholder="Диагнозы">
+        </label>
+        <label>Реабилитация деңгейі
+            <input type="text" id="rehabStage" required placeholder="Деңгей">
+        </label>
+        <button type="submit">Қосу</button>
+    </form>
+    <div id="result"></div>
+</div>
+<script>
+    document.getElementById('patientForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const iin = document.getElementById('iin').value.trim();
+      if (!/^\d{12}$/.test(iin)) return showResult('ЖСН 12 цифр болуы керек!', true);
+const iinInput = document.getElementById('iin');
+iinInput.addEventListener('input', function() {
+  this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12);
+});
+
+      const data = {
+        iin,
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        middleName: document.getElementById('middleName').value.trim(),
+        birthDate: document.getElementById('birthDate').value,
+        gender: document.getElementById('gender').value,
+        diagnosis: document.getElementById('diagnosis').value.trim(),
+        rehabStage: document.getElementById('rehabStage').value.trim()
+      };
+
+      try {
+        const res = await fetch('http://localhost:10000/api/patient', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (res.ok) {
+          showResult('✅ Пациент сәтті қосылды!', false);
+          document.getElementById('patientForm').reset();
+        } else {
+          showResult(result.error || 'Ошибка!', true);
+        }
+      } catch (err) {
+        showResult('Сервер қолжетімді емес: ' + err.message, true);
+      }
+    });
+
+    function showResult(msg, isError) {
+      const el = document.getElementById('result');
+      el.textContent = msg;
+      el.className = isError ? 'error' : 'success';
+    }
+</script>
+</body>
+</html>

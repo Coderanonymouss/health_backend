@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Пациенттер тізімдерін қосу</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { background: #f4f8fb; font-family: 'Segoe UI', Arial, sans-serif; min-height: 100vh; }
+        .card {
+          max-width: 680px; background: #fff; margin: 48px auto; padding: 2.5rem 2.5rem 2rem 2.5rem;
+          border-radius: 18px; box-shadow: 0 4px 28px 0 #0002;
+        }
+        h2 { margin-bottom: 1.3rem; font-weight: 700; color: #263859; text-align: center; }
+        textarea {
+          width: 100%; min-height: 180px; font-size: 1.04em;
+          padding: 14px; border-radius: 7px; border: 1px solid #ccd6e0;
+          background: #f7fafd; margin-bottom: 0.8em; resize: vertical;
+        }
+        button {
+          background: linear-gradient(90deg, #4e8af4 0%, #67d8d8 100%);
+          color: #fff; border: none; border-radius: 7px; padding: 13px 0;
+          font-size: 1.07em; width: 100%; font-weight: 600;
+          margin-top: 0.7em; box-shadow: 0 2px 12px 0 #67d8d840; cursor: pointer;
+          transition: background 0.18s;
+        }
+        button:hover { background: linear-gradient(90deg, #4e8af4 0%, #45b7c3 100%); }
+        .result { margin-top: 1em; white-space: pre-wrap; background: #f9fbfc; padding: 1.1em; border-radius: 7px; font-size: 0.97em; }
+        .error { color: #c00; font-weight: 500; }
+        @media (max-width: 700px) {
+          .card { padding: 1.3rem 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>Пациенттер тізімін қосу (JSON)</h2>
+    <p>JSON форматында пациенттер тізімін енгізіңіз. Әрбір объект — бұл бір пациент.</p>
+    <textarea id="jsonInput">
+        Мысалы:
+[
+  {
+    "iin": "930421520011",
+    "firstName": "Иван",
+    "lastName": "Иванов",
+    "middleName": "Иванович",
+    "birthDate": "1993-04-21",
+    "gender": "ер",
+    "diagnosis": "Восстановление после операции",
+    "rehabStage": "2 этап"
+  }
+]</textarea>
+    <button onclick="sendPatients()">Пациенттерді қосу</button>
+    <div id="result" class="result"></div>
+</div>
+<script>
+    function validatePatient(patient, idx) {
+      let errors = [];
+      if (!/^\d{12}$/.test(patient.iin || "")) errors.push(`Пациент #${idx + 1}: ЖСН 12 цифр болуы керек`);
+      if (!patient.firstName || !patient.firstName.trim()) errors.push(`Пациент #${idx + 1}: Есімі міндетті`);
+      if (!patient.lastName || !patient.lastName.trim()) errors.push(`Пациент #${idx + 1}: Тегі міндетті`);
+      if (!patient.gender || !patient.gender.trim()) errors.push(`Пациент #${idx + 1}: Жынысы міндетті`);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(patient.birthDate || "")) errors.push(`Пациент #${idx + 1}: Қате туған күні ( YYYY-MM-DD болу керек)`);
+      return errors;
+    }
+    function sendPatients() {
+      const result = document.getElementById('result');
+      let patients;
+      try {
+        patients = JSON.parse(document.getElementById('jsonInput').value);
+        if (!Array.isArray(patients)) throw "Бұл массив емес!";
+      } catch (e) {
+        result.innerHTML = "<span class='error'>JSON қате енгізілген: " + e + "</span>";
+        return;
+      }
+      let allErrors = [];
+      patients.forEach((p, idx) => {
+        allErrors.push(...validatePatient(p, idx));
+      });
+      if (allErrors.length) {
+        result.innerHTML = "<span class='error'>Қатені туырлаңыз:</span>\n" + allErrors.join('\n');
+        return;
+      }
+      fetch('http://localhost:10000/api/patients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patients)
+      })
+      .then(r => r.json())
+      .then(data => {
+        result.textContent = "Сервердің жауабы:\n" + JSON.stringify(data, null, 2);
+      })
+      .catch(err => {
+        result.textContent = "Сұрау қате: " + err;
+      });
+    }
+</script>
+</body>
+</html>

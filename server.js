@@ -3,10 +3,14 @@ console.log('Server is starting...');
 const express = require('express');
 const cors = require('cors');
 const mongoose = require("mongoose");
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Для отдачи html-страниц по прямой ссылке
+app.use(express.static(__dirname));
 
 const MONGO_URI = "mongodb+srv://greatstack:greatstack@health.t8k3jnw.mongodb.net/health?retryWrites=true&w=majority";
 
@@ -59,45 +63,50 @@ mongoose.connect(MONGO_URI)
         console.error('❌ Ошибка при добавлении пациента:', err);
         res.status(500).json({ error: 'Ошибка при добавлении пациента', details: err.message });
       }
-        app.get('/api/patient', (req, res) => {
-          res.sendFile(path.join(__dirname, 'add_patient.html'));
     });
 
-// Массовое добавление пациентов
-app.post('/api/patients', async (req, res) => {
-  const patients = req.body; // Ожидается массив объектов
+    // 5. Массовое добавление пациентов
+    app.post('/api/patients', async (req, res) => {
+      const patients = req.body; // Ожидается массив объектов
 
-  if (!Array.isArray(patients)) {
-    return res.status(400).json({ error: "Ожидается массив пациентов!" });
-  }
-
-  const results = [];
-  for (const p of patients) {
-    try {
-      // Проверяем на дубль
-      const exists = await Patient.findOne({ iin: p.iin });
-      if (exists) {
-        results.push({ iin: p.iin, status: "error", message: "Пациент с таким ИИН уже есть" });
-        continue;
+      if (!Array.isArray(patients)) {
+        return res.status(400).json({ error: "Ожидается массив пациентов!" });
       }
-      const patient = new Patient(p);
-      await patient.save();
-      results.push({ iin: p.iin, status: "success" });
-    } catch (err) {
-      results.push({ iin: p.iin, status: "error", message: err.message });
-    }
-  }
-  res.json(results);
-  app.get('/api/patients', (req, res) => {
-    res.sendFile(path.join(__dirname, 'add_patients.html'));
-});
 
-    // 5. Проверка сервера
+      const results = [];
+      for (const p of patients) {
+        try {
+          // Проверяем на дубль
+          const exists = await Patient.findOne({ iin: p.iin });
+          if (exists) {
+            results.push({ iin: p.iin, status: "error", message: "Пациент с таким ИИН уже есть" });
+            continue;
+          }
+          const patient = new Patient(p);
+          await patient.save();
+          results.push({ iin: p.iin, status: "success" });
+        } catch (err) {
+          results.push({ iin: p.iin, status: "error", message: err.message });
+        }
+      }
+      res.json(results);
+    });
+
+    // 6. Отдача HTML-страниц (не внутрь других функций!)
+    app.get('/add_patient', (req, res) => {
+      res.sendFile(path.join(__dirname, 'add_patient.html'));
+    });
+
+    app.get('/add_patients', (req, res) => {
+      res.sendFile(path.join(__dirname, 'add_patients.html'));
+    });
+
+    // 7. Проверка сервера
     app.get('/', (req, res) => {
       res.send('✅ Patient API is working');
     });
 
-    // 6. Запуск сервера
+    // 8. Запуск сервера
     const PORT = process.env.PORT || 10000;
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);

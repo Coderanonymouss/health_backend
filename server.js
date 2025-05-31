@@ -16,7 +16,7 @@ mongoose.connect(MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB connected successfully");
 
-    // 2. Определяем схему пациента
+    // 2. Схема пациента
     const patientSchema = new mongoose.Schema({
       iin: { type: String, required: true, unique: true },
       firstName: String,
@@ -45,7 +45,7 @@ mongoose.connect(MONGO_URI)
       }
     });
 
-    // 4. Добавить пациента
+    // 4. Добавить одного пациента
     app.post('/api/patient', async (req, res) => {
       try {
         const existing = await Patient.findOne({ iin: req.body.iin });
@@ -60,16 +60,11 @@ mongoose.connect(MONGO_URI)
         console.error('❌ Ошибка при добавлении пациента:', err);
         res.status(500).json({ error: 'Ошибка при добавлении пациента', details: err.message });
       }
-        app.get('/api/patient', (req, res) => {
-          res.sendFile(path.join(__dirname, 'add_patient.html'));
     });
 
-    // Массовое добавление пациентов
-    app.post('/api/patients', async (req, res) => {
-      const patients = req.body;
     // 5. Массовое добавление пациентов
     app.post('/api/patients', async (req, res) => {
-      const patients = req.body; // Ожидается массив объектов
+      const patients = req.body;
 
       if (!Array.isArray(patients)) {
         return res.status(400).json({ error: "Ожидается массив пациентов!" });
@@ -78,7 +73,6 @@ mongoose.connect(MONGO_URI)
       const results = [];
       for (const p of patients) {
         try {
-          // Проверяем на дубль
           const exists = await Patient.findOne({ iin: p.iin });
           if (exists) {
             results.push({ iin: p.iin, status: "error", message: "Пациент с таким ИИН уже есть" });
@@ -94,7 +88,7 @@ mongoose.connect(MONGO_URI)
       res.json(results);
     });
 
-    // 6. Отдача HTML-страниц (не внутрь других функций!)
+    // 6. HTML-страницы (не API, просто UI)
     app.get('/add_patient', (req, res) => {
       res.sendFile(path.join(__dirname, 'add_patient.html'));
     });
@@ -102,35 +96,13 @@ mongoose.connect(MONGO_URI)
     app.get('/add_patients', (req, res) => {
       res.sendFile(path.join(__dirname, 'add_patients.html'));
     });
-      const results = [];
-      for (const p of patients) {
-        try {
-          const exists = await Patient.findOne({ iin: p.iin });
-          if (exists) {
-            results.push({ iin: p.iin, status: "error", message: "Пациент с таким ИИН уже есть" });
-            continue;
-          }
-          const patient = new Patient(p);
-          await patient.save();
-          results.push({ iin: p.iin, status: "success" });
-        } catch (err) {
-          results.push({ iin: p.iin, status: "error", message: err.message });
-        }
-      }
-      res.json(results);
-    });
 
-    // Вернуть форму массового добавления (опционально)
-    app.get('/api/patients', (req, res) => {
-      res.sendFile(path.join(__dirname, 'add_patients.html'));
-    });
-
-    // 5. Проверка сервера
+    // 7. Проверка сервера
     app.get('/', (req, res) => {
       res.send('✅ Patient API is working');
     });
 
-    // 6. Запуск сервера
+    // 8. Запуск сервера
     const PORT = process.env.PORT || 10000;
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);
